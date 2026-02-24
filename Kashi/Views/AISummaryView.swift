@@ -4,9 +4,15 @@ import SwiftData
 struct AISummaryView: View {
     @Bindable var meeting: Meeting
     @ObservedObject var ollama: OllamaService
-    @StateObject private var structuring = NoteStructuringService()
+    @StateObject private var structuring: NoteStructuringService
     @State private var selectedTemplateId = "general"
     @State private var isGenerating = false
+
+    init(meeting: Meeting, ollama: OllamaService) {
+        self.meeting = meeting
+        self.ollama = ollama
+        _structuring = StateObject(wrappedValue: NoteStructuringService(ollama: ollama))
+    }
 
     private var transcriptText: String {
         NoteStructuringService.transcriptText(from: meeting.segments)
@@ -61,7 +67,8 @@ struct AISummaryView: View {
                 let result = try await structuring.generateStructuredNotes(
                     transcript: transcriptText,
                     notes: meeting.notesMarkdown,
-                    template: template
+                    template: template,
+                    model: ollama.model
                 )
                 await MainActor.run { meeting.aiSummaryMarkdown = result }
             } catch {

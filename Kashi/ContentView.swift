@@ -3,19 +3,25 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query(sort: \Meeting.date, order: .reverse) private var meetings: [Meeting]
     @StateObject private var audioCapture = AudioCaptureService()
     @StateObject private var transcription = TranscriptionService()
     @State private var systemCapture: SystemAudioCaptureService?
     @State private var hasRequestedPermission = false
     @State private var currentMeeting: Meeting?
-    @State private var selectedMeeting: Meeting?
+    @State private var selectedMeetingId: UUID?
     @State private var sessionStartTime: Date?
     @StateObject private var calendarService = CalendarService()
+
+    private var selectedMeeting: Meeting? {
+        meetings.first { $0.id == selectedMeetingId }
+    }
 
     var body: some View {
         NavigationSplitView {
             MeetingSidebarView(
-                selectedMeeting: $selectedMeeting,
+                meetings: meetings,
+                selectedMeetingId: $selectedMeetingId,
                 currentMeetingId: currentMeeting?.id,
                 calendarService: calendarService,
                 onStartNew: startSession
@@ -76,7 +82,7 @@ struct ContentView: View {
         )
         modelContext.insert(meeting)
         currentMeeting = meeting
-        selectedMeeting = meeting
+        selectedMeetingId = meeting.id
         sessionStartTime = Date()
 
         transcription.onSegmentFinalized = { [meeting, modelContext] segment in
@@ -124,6 +130,7 @@ struct ContentView: View {
             meeting.durationSeconds = Date().timeIntervalSince(start)
             try? modelContext.save()
         }
+        currentMeeting = nil
     }
 
 }

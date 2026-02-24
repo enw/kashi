@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage("ollamaBaseURL") private var ollamaBaseURL = "http://localhost:11434"
+    @AppStorage("ollamaBaseURL") private var ollamaBaseURL = "http://127.0.0.1:11434"
     @AppStorage("ollamaModel") private var ollamaModel = "llama3.2"
     @AppStorage("whisperModel") private var whisperModel = "base.en"
 

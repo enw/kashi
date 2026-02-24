@@ -2,15 +2,14 @@ import SwiftUI
 import SwiftData
 
 struct MeetingSidebarView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Meeting.date, order: .reverse) private var meetings: [Meeting]
-    @Binding var selectedMeeting: Meeting?
+    var meetings: [Meeting]
+    @Binding var selectedMeetingId: UUID?
     var currentMeetingId: UUID?
     var calendarService: CalendarService?
     var onStartNew: (() -> Void)?
 
     var body: some View {
-        List(selection: $selectedMeeting) {
+        List(selection: $selectedMeetingId) {
             if let calendar = calendarService {
                 UpcomingMeetingsView(calendar: calendar)
             }
@@ -22,7 +21,7 @@ struct MeetingSidebarView: View {
                 }
                 ForEach(meetings) { meeting in
                     MeetingRowView(meeting: meeting, isCurrent: meeting.id == currentMeetingId)
-                        .tag(meeting as Meeting?)
+                        .tag(meeting.id)
                 }
             }
         }
@@ -60,7 +59,7 @@ struct MeetingRowView: View {
 }
 
 #Preview {
-    MeetingSidebarView(selectedMeeting: .constant(nil), currentMeetingId: nil, calendarService: nil, onStartNew: nil)
+    MeetingSidebarView(meetings: [], selectedMeetingId: .constant(nil), currentMeetingId: nil, calendarService: nil, onStartNew: nil)
         .frame(width: 220)
         .modelContainer(for: [Meeting.self, MeetingTranscriptSegment.self], inMemory: true)
 }

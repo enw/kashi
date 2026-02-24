@@ -5,6 +5,8 @@ import UniformTypeIdentifiers
 struct MeetingDetailView: View {
     @Bindable var meeting: Meeting
     var isLive: Bool
+    @AppStorage("ollamaBaseURL") private var ollamaBaseURL = "http://127.0.0.1:11434"
+    @AppStorage("ollamaModel") private var ollamaModel = "llama3.2"
     @StateObject private var ollama = OllamaService()
 
     var body: some View {
@@ -15,6 +17,9 @@ struct MeetingDetailView: View {
             chatTab
         }
         .tabViewStyle(.automatic)
+        .onAppear { applyOllamaSettings() }
+        .onChange(of: ollamaBaseURL) { _, _ in applyOllamaSettings() }
+        .onChange(of: ollamaModel) { _, _ in applyOllamaSettings() }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
@@ -25,6 +30,12 @@ struct MeetingDetailView: View {
                 }
             }
         }
+    }
+
+    private func applyOllamaSettings() {
+        ollama.baseURL = URL(string: ollamaBaseURL.trimmingCharacters(in: .whitespacesAndNewlines))
+            ?? OllamaService.defaultBaseURL
+        ollama.model = ollamaModel.isEmpty ? "llama3.2" : ollamaModel
     }
 
     private func copyMeetingAsMarkdown() {

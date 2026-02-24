@@ -1,23 +1,42 @@
 import Foundation
 
-/// Client for Ollama's OpenAI-compatible API (localhost:11434).
+/// Client for Ollama's OpenAI-compatible API. Uses 127.0.0.1 by default to avoid
+/// proxy PAC / DNS issues that can break "localhost" (NSURLErrorDomain -1003).
 final class OllamaService: ObservableObject {
     @Published private(set) var isAvailable = false
     @Published private(set) var errorMessage: String?
 
-    private let baseURL: URL
+    /// Base URL for Ollama (e.g. http://127.0.0.1:11434). Set from Settings.
+    var baseURL: URL {
+        get { _baseURL }
+        set { _baseURL = newValue }
+    }
+    private var _baseURL: URL
+    /// Model name. Set from Settings.
+    var model: String {
+        get { _model }
+        set { _model = newValue }
+    }
+    private var _model: String
     private let session: URLSession
 
-    init(baseURL: URL = URL(string: "http://localhost:11434")!) {
-        self.baseURL = baseURL
+    static let defaultBaseURL: URL = URL(string: "http://127.0.0.1:11434")!
+
+    init(baseURL: URL? = nil, model: String = "llama3.2") {
+        self._baseURL = baseURL ?? Self.defaultBaseURL
+        self._model = model
         self.session = URLSession.shared
     }
 
     func checkAvailability() async {
+        let url = baseURL.appending(path: "api/tags")
         do {
-            let (_, response) = try await session.data(from: baseURL.appending(path: "api/tags"))
-            isAvailable = (response as? HTTPURLResponse)?.statusCode == 200
-            await MainActor.run { errorMessage = isAvailable ? nil : "Ollama returned an error" }
+            let (_, response) = try await session.data(from: url)
+            let ok = (response as? HTTPURLResponse)?.statusCode == 200
+            await MainActor.run {
+                isAvailable = ok
+                errorMessage = ok ? nil : "Ollama returned an error"
+            }
         } catch {
             await MainActor.run {
                 isAvailable = false
@@ -28,13 +47,14 @@ final class OllamaService: ObservableObject {
 
     /// Stream a chat completion from Ollama (native /api/chat).
     func streamChat(
-        model: String = "llama3.2",
+        model useModel: String? = nil,
         system: String? = nil,
         messages: [(role: String, content: String)],
         temperature: Double = 0.7
     ) -> AsyncThrowingStream<String, Error> {
-        AsyncThrowingStream { continuation in
-            let url = baseURL.appending(path: "api/chat")
+        let url = baseURL.appending(path: "api/chat")
+        let modelName = useModel ?? model
+        return AsyncThrowingStream { continuation in
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -48,7 +68,7 @@ final class OllamaService: ObservableObject {
             }
 
             let body: [String: Any] = [
-                "model": model,
+                "model": modelName,
                 "messages": allMessages,
                 "stream": true,
                 "options": ["temperature": temperature]
