@@ -10,6 +10,9 @@ final class Meeting {
     var notesMarkdown: String
     var aiSummaryMarkdown: String?
 
+    var participants: [Person] = []
+    var actionItems: [ActionItem] = []
+
     @Relationship(deleteRule: .cascade, inverse: \MeetingTranscriptSegment.meeting)
     var segments: [MeetingTranscriptSegment] = []
 
@@ -19,7 +22,9 @@ final class Meeting {
         date: Date = Date(),
         durationSeconds: Double = 0,
         notesMarkdown: String = "",
-        aiSummaryMarkdown: String? = nil
+        aiSummaryMarkdown: String? = nil,
+        participants: [Person] = [],
+        actionItems: [ActionItem] = []
     ) {
         self.id = id
         self.title = title
@@ -27,6 +32,8 @@ final class Meeting {
         self.durationSeconds = durationSeconds
         self.notesMarkdown = notesMarkdown
         self.aiSummaryMarkdown = aiSummaryMarkdown
+        self.participants = participants
+        self.actionItems = actionItems
     }
 }
 

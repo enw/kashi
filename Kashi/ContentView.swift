@@ -14,6 +14,8 @@ struct ContentView: View {
     @State private var sessionStartTime: Date?
     @StateObject private var calendarService = CalendarService()
     @State private var showExportRangeSheet = false
+    @State private var showGlobalActions = false
+    @State private var isImporting = false
 
     private var selectedMeeting: Meeting? {
         meetings.first { $0.id == selectedMeetingId }
@@ -27,7 +29,13 @@ struct ContentView: View {
                 currentMeetingId: currentMeeting?.id,
                 calendarService: calendarService,
                 onStartNew: startSession,
-                onExportRange: { showExportRangeSheet = true }
+                onExportRange: { showExportRangeSheet = true },
+                onShowActions: {
+                    showGlobalActions = true
+                    selectedMeetingId = nil
+                },
+                onExportData: exportData,
+                onImportData: { importData() }
             )
             .frame(minWidth: 220)
             .sheet(isPresented: $showExportRangeSheet) {
@@ -59,7 +67,9 @@ struct ContentView: View {
 
     @ViewBuilder
     private var detailContent: some View {
-        if let meeting = selectedMeeting, meeting.id == currentMeeting?.id {
+        if showGlobalActions {
+            GlobalActionItemsView()
+        } else if let meeting = selectedMeeting, meeting.id == currentMeeting?.id {
             LiveSessionView(
                 transcription: transcription,
                 meeting: meeting,
@@ -141,11 +151,41 @@ struct ContentView: View {
         currentMeeting = nil
     }
 
+    private func exportData() {
+        do {
+            let data = try ImportExportService.exportAll(modelContext: modelContext)
+            let panel = NSSavePanel()
+            panel.allowedFileTypes = ["json"]
+            panel.nameFieldStringValue = "Kashi-export.json"
+            panel.begin { response in
+                guard response == .OK, let url = panel.url else { return }
+                try? data.write(to: url)
+            }
+        } catch {
+            // For now, ignore export errors; could surface via UI later.
+        }
+    }
+
+    private func importData() {
+        let panel = NSOpenPanel()
+        panel.allowedFileTypes = ["json"]
+        panel.allowsMultipleSelection = false
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else { return }
+            do {
+                let data = try Data(contentsOf: url)
+                try ImportExportService.importFrom(data: data, into: modelContext)
+            } catch {
+                // For now, ignore import errors; could surface via UI later.
+            }
+        }
+    }
+
 }
 
 #Preview {
     ContentView()
         .frame(width: 900, height: 600)
-        .modelContainer(for: [Meeting.self, MeetingTranscriptSegment.self], inMemory: true)
+        .modelContainer(for: [Meeting.self, MeetingTranscriptSegment.self, Person.self, Team.self, ActionItem.self], inMemory: true)
         .environmentObject(AppState.shared)
 }

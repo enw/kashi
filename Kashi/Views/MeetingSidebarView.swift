@@ -8,6 +8,9 @@ struct MeetingSidebarView: View {
     var calendarService: CalendarService?
     var onStartNew: (() -> Void)?
     var onExportRange: (() -> Void)?
+    var onShowActions: (() -> Void)?
+    var onExportData: (() -> Void)?
+    var onImportData: (() -> Void)?
 
     var body: some View {
         List(selection: $selectedMeetingId) {
@@ -26,6 +29,21 @@ struct MeetingSidebarView: View {
                 UpcomingMeetingsView(calendar: calendar)
             }
             Section("Meetings") {
+                if let onExportData = onExportData {
+                    Button(action: onExportData) {
+                        Label("Export data…", systemImage: "square.and.arrow.up.on.square")
+                    }
+                }
+                if let onImportData = onImportData {
+                    Button(action: onImportData) {
+                        Label("Import data…", systemImage: "square.and.arrow.down.on.square")
+                    }
+                }
+                if let onShowActions = onShowActions {
+                    Button(action: onShowActions) {
+                        Label("Action items", systemImage: "checklist")
+                    }
+                }
                 if let onExportRange = onExportRange {
                     Button(action: onExportRange) {
                         Label("Export range…", systemImage: "square.and.arrow.down")
@@ -76,7 +94,7 @@ struct MeetingRowView: View {
 }
 
 #Preview {
-    MeetingSidebarView(meetings: [], selectedMeetingId: .constant(nil), currentMeetingId: nil, calendarService: nil, onStartNew: nil, onExportRange: nil)
+    MeetingSidebarView(meetings: [], selectedMeetingId: .constant(nil), currentMeetingId: nil, calendarService: nil, onStartNew: nil, onExportRange: nil, onShowActions: nil, onExportData: nil, onImportData: nil)
         .frame(width: 220)
-        .modelContainer(for: [Meeting.self, MeetingTranscriptSegment.self], inMemory: true)
+        .modelContainer(for: [Meeting.self, MeetingTranscriptSegment.self, Person.self, Team.self, ActionItem.self], inMemory: true)
 }

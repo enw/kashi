@@ -15,6 +15,7 @@ struct MeetingDetailView: View {
             transcriptTab
             notesTab
             summaryTab
+            actionsTab
             chatTab
         }
         .tabViewStyle(.automatic)
@@ -146,6 +147,12 @@ struct MeetingDetailView: View {
         AISummaryView(meeting: meeting, ollama: ollama)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .tabItem { Label("Summary", systemImage: "sparkles") }
+    }
+
+    private var actionsTab: some View {
+        MeetingActionItemsView(meeting: meeting)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .tabItem { Label("Actions", systemImage: "checklist") }
     }
 
     private var chatTab: some View {

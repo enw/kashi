@@ -6,7 +6,13 @@ struct KashiApp: App {
     @StateObject private var appState = AppState.shared
 
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([Meeting.self, MeetingTranscriptSegment.self])
+        let schema = Schema([
+            Meeting.self,
+            MeetingTranscriptSegment.self,
+            Person.self,
+            Team.self,
+            ActionItem.self
+        ])
         let config = ModelConfiguration(isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, configurations: [config])
