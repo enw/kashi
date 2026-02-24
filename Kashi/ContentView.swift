@@ -3,6 +3,7 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var appState: AppState
     @Query(sort: \Meeting.date, order: .reverse) private var meetings: [Meeting]
     @StateObject private var audioCapture = AudioCaptureService()
     @StateObject private var transcription = TranscriptionService()
@@ -146,4 +147,5 @@ struct ContentView: View {
     ContentView()
         .frame(width: 900, height: 600)
         .modelContainer(for: [Meeting.self, MeetingTranscriptSegment.self], inMemory: true)
+        .environmentObject(AppState.shared)
 }

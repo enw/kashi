@@ -3,6 +3,8 @@ import SwiftData
 
 @main
 struct KashiApp: App {
+    @StateObject private var appState = AppState.shared
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([Meeting.self, MeetingTranscriptSegment.self])
         let config = ModelConfiguration(isStoredInMemoryOnly: false)
@@ -17,11 +19,21 @@ struct KashiApp: App {
         WindowGroup {
             ContentView()
                 .modelContainer(sharedModelContainer)
+                .environmentObject(appState)
+                .sheet(isPresented: $appState.showHelp) {
+                    HelpView()
+                }
         }
         .windowResizability(.contentSize)
         .defaultSize(width: 900, height: 600)
         .commands {
             CommandGroup(replacing: .newItem) {}
+            CommandGroup(replacing: .help) {
+                Button("Kashi Help") {
+                    appState.showHelp = true
+                }
+                .keyboardShortcut("?", modifiers: .command)
+            }
         }
         Settings {
             SettingsView()

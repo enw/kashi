@@ -11,6 +11,17 @@ struct MeetingSidebarView: View {
 
     var body: some View {
         List(selection: $selectedMeetingId) {
+            Section {
+                HStack(spacing: 10) {
+                    KashiLogoView(size: 28)
+                    Text("Kashi")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                }
+                .padding(.vertical, 8)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+            }
             if let calendar = calendarService {
                 UpcomingMeetingsView(calendar: calendar)
             }
