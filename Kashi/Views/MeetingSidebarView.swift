@@ -7,6 +7,7 @@ struct MeetingSidebarView: View {
     var currentMeetingId: UUID?
     var calendarService: CalendarService?
     var onStartNew: (() -> Void)?
+    var onExportRange: (() -> Void)?
 
     var body: some View {
         List(selection: $selectedMeetingId) {
@@ -14,6 +15,11 @@ struct MeetingSidebarView: View {
                 UpcomingMeetingsView(calendar: calendar)
             }
             Section("Meetings") {
+                if let onExportRange = onExportRange {
+                    Button(action: onExportRange) {
+                        Label("Export range…", systemImage: "square.and.arrow.down")
+                    }
+                }
                 if let onStartNew = onStartNew {
                     Button(action: onStartNew) {
                         Label("New meeting", systemImage: "plus.circle.fill")
@@ -59,7 +65,7 @@ struct MeetingRowView: View {
 }
 
 #Preview {
-    MeetingSidebarView(meetings: [], selectedMeetingId: .constant(nil), currentMeetingId: nil, calendarService: nil, onStartNew: nil)
+    MeetingSidebarView(meetings: [], selectedMeetingId: .constant(nil), currentMeetingId: nil, calendarService: nil, onStartNew: nil, onExportRange: nil)
         .frame(width: 220)
         .modelContainer(for: [Meeting.self, MeetingTranscriptSegment.self], inMemory: true)
 }

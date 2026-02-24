@@ -12,6 +12,7 @@ struct ContentView: View {
     @State private var selectedMeetingId: UUID?
     @State private var sessionStartTime: Date?
     @StateObject private var calendarService = CalendarService()
+    @State private var showExportRangeSheet = false
 
     private var selectedMeeting: Meeting? {
         meetings.first { $0.id == selectedMeetingId }
@@ -24,9 +25,15 @@ struct ContentView: View {
                 selectedMeetingId: $selectedMeetingId,
                 currentMeetingId: currentMeeting?.id,
                 calendarService: calendarService,
-                onStartNew: startSession
+                onStartNew: startSession,
+                onExportRange: { showExportRangeSheet = true }
             )
             .frame(minWidth: 220)
+            .sheet(isPresented: $showExportRangeSheet) {
+                ExportRangeSheet(meetings: meetings) {
+                    showExportRangeSheet = false
+                }
+            }
         } detail: {
             detailContent
                 .frame(minWidth: 600, minHeight: 400)

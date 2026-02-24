@@ -29,6 +29,7 @@
 		A1000023 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000023 /* SettingsView.swift */; };
 		A1000024 /* UpcomingMeetingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000024 /* UpcomingMeetingsView.swift */; };
 		A1000025 /* MarkdownTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000025 /* MarkdownTextView.swift */; };
+		A1000026 /* ExportRangeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000026 /* ExportRangeSheet.swift */; };
 		A1000008 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = A3000001 /* WhisperKit */; };
 		A1000009 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000010 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -58,6 +59,7 @@
 		A2000023 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A2000024 /* UpcomingMeetingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpcomingMeetingsView.swift; sourceTree = "<group>"; };
 		A2000025 /* MarkdownTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTextView.swift; sourceTree = "<group>"; };
+		A2000026 /* ExportRangeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportRangeSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,6 +137,7 @@
 				A2000016 /* LiveSessionView.swift */,
 				A2000020 /* MeetingChatView.swift */,
 				A2000021 /* AISummaryView.swift */,
+				A2000026 /* ExportRangeSheet.swift */,
 				A2000025 /* MarkdownTextView.swift */,
 				A2000023 /* SettingsView.swift */,
 				A2000024 /* UpcomingMeetingsView.swift */,
@@ -259,6 +262,7 @@
 				A1000023 /* SettingsView.swift in Sources */,
 				A1000024 /* UpcomingMeetingsView.swift in Sources */,
 				A1000025 /* MarkdownTextView.swift in Sources */,
+				A1000026 /* ExportRangeSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

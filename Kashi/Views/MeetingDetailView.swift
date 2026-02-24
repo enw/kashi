@@ -25,7 +25,10 @@ struct MeetingDetailView: View {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button("Copy as Markdown") { copyMeetingAsMarkdown() }
-                    Button("Export…") { exportMeeting() }
+                    Button("Export full meeting…") { exportMeeting() }
+                    Divider()
+                    Button("Download transcript…") { downloadTranscript() }
+                    Button("Download summary…") { downloadSummary() }
                 } label: {
                     Image(systemName: "square.and.arrow.up")
                 }
@@ -45,13 +48,36 @@ struct MeetingDetailView: View {
     }
 
     private func exportMeeting() {
+        saveToFile(content: meetingMarkdown(), defaultName: "\(meeting.title).md")
+    }
+
+    private func downloadTranscript() {
+        saveToFile(content: rawTranscriptText(), defaultName: "\(meeting.title) – transcript.md")
+    }
+
+    private func downloadSummary() {
+        let summary = meeting.aiSummaryMarkdown ?? ""
+        saveToFile(content: summary, defaultName: "\(meeting.title) – summary.md")
+    }
+
+    private func saveToFile(content: String, defaultName: String) {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.plainText]
-        panel.nameFieldStringValue = "\(meeting.title).md"
+        panel.nameFieldStringValue = defaultName
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }
-            try? meetingMarkdown().write(to: url, atomically: true, encoding: .utf8)
+            try? content.write(to: url, atomically: true, encoding: .utf8)
         }
+    }
+
+    private func rawTranscriptText() -> String {
+        var text = "# \(meeting.title) – Transcript\n\n"
+        text += "Date: \(meeting.date.formatted(date: .long, time: .shortened))\n\n"
+        for seg in meeting.segments.sorted(by: { $0.timestamp < $1.timestamp }) {
+            let who = seg.speaker == .me ? "Me" : "Others"
+            text += "**\(who):** \(seg.text)\n\n"
+        }
+        return text
     }
 
     private func meetingMarkdown() -> String {
