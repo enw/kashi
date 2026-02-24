@@ -7,6 +7,14 @@ struct AISummaryView: View {
     @StateObject private var structuring: NoteStructuringService
     @State private var selectedTemplateId = "general"
     @State private var isGenerating = false
+    @State private var isEditingSummary = false
+
+    private var summaryBinding: Binding<String> {
+        Binding(
+            get: { meeting.aiSummaryMarkdown ?? "" },
+            set: { meeting.aiSummaryMarkdown = $0 }
+        )
+    }
 
     init(meeting: Meeting, ollama: OllamaService) {
         self.meeting = meeting
@@ -43,18 +51,55 @@ struct AISummaryView: View {
                     ProgressView()
                         .padding()
                 }
-                if let summary = meeting.aiSummaryMarkdown, !summary.isEmpty {
-                    ScrollView {
-                        MarkdownTextView(markdown: summary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Spacer()
+                        if isEditingSummary {
+                            Button("Done") { isEditingSummary = false }
+                        } else {
+                            Button("Edit") { isEditingSummary = true }
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    if isEditingSummary {
+                        summaryEditor
+                    } else if let summary = meeting.aiSummaryMarkdown, !summary.isEmpty {
+                        ScrollView {
+                            MarkdownTextView(markdown: summary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding()
+                        }
+                        .frame(maxHeight: .infinity)
+                    } else {
+                        Text("No summary yet. Generate one above or tap Edit to add your own.")
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .padding()
                     }
-                    .frame(maxHeight: .infinity)
-                    .background(Color(nsColor: .textBackgroundColor).opacity(0.5))
                 }
+                .frame(maxHeight: .infinity)
+                .background(Color(nsColor: .textBackgroundColor).opacity(0.5))
             }
         }
         .task { await ollama.checkAvailability() }
+    }
+
+    private var summaryEditor: some View {
+        TextEditor(text: summaryBinding)
+            .font(.body)
+            .scrollContentBackground(.hidden)
+            .background(Color(nsColor: .textBackgroundColor))
+            .overlay(alignment: .topLeading) {
+                if (meeting.aiSummaryMarkdown ?? "").isEmpty {
+                    Text("Summary (markdown supported)…")
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 8)
+                        .allowsHitTesting(false)
+                }
+            }
+            .padding(8)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func generateSummary() {

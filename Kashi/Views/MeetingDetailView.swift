@@ -8,6 +8,7 @@ struct MeetingDetailView: View {
     @AppStorage("ollamaBaseURL") private var ollamaBaseURL = "http://127.0.0.1:11434"
     @AppStorage("ollamaModel") private var ollamaModel = "llama3.2"
     @StateObject private var ollama = OllamaService()
+    @State private var isEditingNotes = false
 
     var body: some View {
         TabView {
@@ -80,9 +81,39 @@ struct MeetingDetailView: View {
     }
 
     private var notesTab: some View {
-        NoteEditorView(text: $meeting.notesMarkdown)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .tabItem { Label("Notes", systemImage: "note.text") }
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Spacer()
+                if isEditingNotes {
+                    Button("Done") { isEditingNotes = false }
+                } else {
+                    Button("Edit") { isEditingNotes = true }
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.top, 4)
+            if isEditingNotes {
+                NoteEditorView(text: $meeting.notesMarkdown)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    Group {
+                        if meeting.notesMarkdown.isEmpty {
+                            Text("No notes yet. Tap Edit to add notes (markdown supported).")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            MarkdownTextView(markdown: meeting.notesMarkdown)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color(nsColor: .textBackgroundColor).opacity(0.5))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .tabItem { Label("Notes", systemImage: "note.text") }
     }
 
     private var summaryTab: some View {
