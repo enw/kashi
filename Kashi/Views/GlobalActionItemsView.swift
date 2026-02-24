@@ -64,12 +64,17 @@ struct GlobalActionItemsView: View {
     }
 
     private var header: some View {
-        HStack {
-            Text("All Action Items")
-                .font(.title2)
-                .bold()
-            Spacer()
-            Text("\(filteredItems.count) shown")
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("All Action Items")
+                    .font(.title2)
+                    .bold()
+                Spacer()
+                Text("\(filteredItems.count) shown")
+                    .foregroundStyle(.secondary)
+            }
+            Text("Select a meeting in the sidebar to open its details.")
+                .font(.caption)
                 .foregroundStyle(.secondary)
         }
     }

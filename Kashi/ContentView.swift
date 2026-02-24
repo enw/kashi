@@ -35,7 +35,8 @@ struct ContentView: View {
                     selectedMeetingId = nil
                 },
                 onExportData: exportData,
-                onImportData: { importData() }
+                onImportData: { importData() },
+                onDeleteMeeting: deleteMeeting
             )
             .frame(minWidth: 220)
             .sheet(isPresented: $showExportRangeSheet) {
@@ -46,6 +47,11 @@ struct ContentView: View {
         } detail: {
             detailContent
                 .frame(minWidth: 600, minHeight: 400)
+        }
+        .onChange(of: selectedMeetingId) { _, newValue in
+            if newValue != nil {
+                showGlobalActions = false
+            }
         }
         .task {
             guard !hasRequestedPermission else { return }
@@ -78,7 +84,7 @@ struct ContentView: View {
                 onStop: stopSession
             )
         } else if let meeting = selectedMeeting {
-            MeetingDetailView(meeting: meeting, isLive: false)
+            MeetingDetailView(meeting: meeting, isLive: false, onDeleted: { selectedMeetingId = nil })
         } else {
             VStack(spacing: 16) {
                 Text("No meeting selected")
@@ -181,6 +187,16 @@ struct ContentView: View {
         }
     }
 
+    private func deleteMeeting(_ meeting: Meeting) {
+        if selectedMeetingId == meeting.id {
+            selectedMeetingId = nil
+        }
+        if currentMeeting?.id == meeting.id {
+            currentMeeting = nil
+        }
+        modelContext.delete(meeting)
+        try? modelContext.save()
+    }
 }
 
 #Preview {

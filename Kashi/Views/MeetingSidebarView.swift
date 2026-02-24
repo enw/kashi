@@ -11,6 +11,7 @@ struct MeetingSidebarView: View {
     var onShowActions: (() -> Void)?
     var onExportData: (() -> Void)?
     var onImportData: (() -> Void)?
+    var onDeleteMeeting: ((Meeting) -> Void)?
 
     var body: some View {
         List(selection: $selectedMeetingId) {
@@ -55,8 +56,12 @@ struct MeetingSidebarView: View {
                     }
                 }
                 ForEach(meetings) { meeting in
-                    MeetingRowView(meeting: meeting, isCurrent: meeting.id == currentMeetingId)
-                        .tag(meeting.id)
+                    MeetingRowView(
+                        meeting: meeting,
+                        isCurrent: meeting.id == currentMeetingId,
+                        onDelete: onDeleteMeeting
+                    )
+                    .tag(meeting.id)
                 }
             }
         }
@@ -67,6 +72,9 @@ struct MeetingSidebarView: View {
 struct MeetingRowView: View {
     let meeting: Meeting
     let isCurrent: Bool
+    var onDelete: ((Meeting) -> Void)?
+
+    @State private var showDeleteConfirm = false
 
     private var title: String {
         meeting.title.isEmpty ? "Untitled" : meeting.title
@@ -90,11 +98,26 @@ struct MeetingRowView: View {
             }
         }
         .padding(.vertical, 4)
+        .contextMenu {
+            if let onDelete = onDelete {
+                Button("Delete Meeting…", role: .destructive) {
+                    showDeleteConfirm = true
+                }
+            }
+        }
+        .confirmationDialog("Delete this meeting?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                onDelete?(meeting)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The transcript and notes will be removed. Action items from this meeting will be kept but unlinked.")
+        }
     }
 }
 
 #Preview {
-    MeetingSidebarView(meetings: [], selectedMeetingId: .constant(nil), currentMeetingId: nil, calendarService: nil, onStartNew: nil, onExportRange: nil, onShowActions: nil, onExportData: nil, onImportData: nil)
+    MeetingSidebarView(meetings: [], selectedMeetingId: .constant(nil), currentMeetingId: nil, calendarService: nil, onStartNew: nil, onExportRange: nil, onShowActions: nil, onExportData: nil, onImportData: nil, onDeleteMeeting: nil)
         .frame(width: 220)
         .modelContainer(for: [Meeting.self, MeetingTranscriptSegment.self, Person.self, Team.self, ActionItem.self], inMemory: true)
 }

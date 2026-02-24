@@ -3,12 +3,15 @@ import SwiftData
 import UniformTypeIdentifiers
 
 struct MeetingDetailView: View {
+    @Environment(\.modelContext) private var modelContext
     @Bindable var meeting: Meeting
     var isLive: Bool
+    var onDeleted: (() -> Void)?
     @AppStorage("ollamaBaseURL") private var ollamaBaseURL = "http://127.0.0.1:11434"
     @AppStorage("ollamaModel") private var ollamaModel = "llama3.2"
     @StateObject private var ollama = OllamaService()
     @State private var isEditingNotes = false
+    @State private var showDeleteConfirm = false
 
     var body: some View {
         TabView {
@@ -30,10 +33,24 @@ struct MeetingDetailView: View {
                     Divider()
                     Button("Download transcript…") { downloadTranscript() }
                     Button("Download summary…") { downloadSummary() }
+                    if !isLive {
+                        Divider()
+                        Button("Delete Meeting…", role: .destructive) {
+                            showDeleteConfirm = true
+                        }
+                    }
                 } label: {
                     Image(systemName: "square.and.arrow.up")
                 }
             }
+        }
+        .confirmationDialog("Delete this meeting?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                deleteMeeting()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The transcript and notes will be removed. Action items from this meeting will be kept but unlinked.")
         }
     }
 
@@ -69,6 +86,12 @@ struct MeetingDetailView: View {
             guard response == .OK, let url = panel.url else { return }
             try? content.write(to: url, atomically: true, encoding: .utf8)
         }
+    }
+
+    private func deleteMeeting() {
+        modelContext.delete(meeting)
+        try? modelContext.save()
+        onDeleted?()
     }
 
     private func rawTranscriptText() -> String {
