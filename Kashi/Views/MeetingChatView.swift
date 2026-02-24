@@ -16,8 +16,7 @@ struct MeetingChatView: View {
         VStack(alignment: .leading, spacing: 12) {
             ScrollView {
                 if !answer.isEmpty {
-                    Text(answer)
-                        .textSelection(.enabled)
+                    MarkdownTextView(markdown: answer)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
                 }
@@ -43,7 +42,6 @@ struct MeetingChatView: View {
         answer = ""
         isStreaming = true
         Task {
-            defer { await MainActor.run { isStreaming = false } }
             var full = ""
             do {
                 for try await delta in ollama.streamChat(
@@ -59,6 +57,7 @@ struct MeetingChatView: View {
             } catch {
                 await MainActor.run { answer = "Error: \(error.localizedDescription)" }
             }
+            await MainActor.run { isStreaming = false }
         }
     }
 }

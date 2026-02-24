@@ -45,8 +45,7 @@ struct AISummaryView: View {
                 }
                 if let summary = meeting.aiSummaryMarkdown, !summary.isEmpty {
                     ScrollView {
-                        Text(summary)
-                            .textSelection(.enabled)
+                        MarkdownTextView(markdown: summary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding()
                     }
