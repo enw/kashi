@@ -36,7 +36,9 @@ final class SystemAudioCaptureService: NSObject, ObservableObject {
         var tapIDOut: AudioObjectID = AudioObjectID(kAudioObjectUnknown)
         var status = AudioHardwareCreateProcessTap(description, &tapIDOut)
         guard status == noErr else {
-            errorMessage = "AudioHardwareCreateProcessTap failed: \(status)"
+            DispatchQueue.main.async { [weak self] in
+                self?.errorMessage = "AudioHardwareCreateProcessTap failed: \(status)"
+            }
             return
         }
         tapID = tapIDOut
@@ -62,7 +64,9 @@ final class SystemAudioCaptureService: NSObject, ObservableObject {
         if status != noErr {
             AudioHardwareDestroyProcessTap(tapID)
             tapID = 0
-            errorMessage = "AudioHardwareCreateAggregateDevice failed: \(status)"
+            DispatchQueue.main.async { [weak self] in
+                self?.errorMessage = "AudioHardwareCreateAggregateDevice failed: \(status)"
+            }
             return
         }
         aggregateDeviceID = aggregateIDOut
@@ -107,7 +111,9 @@ final class SystemAudioCaptureService: NSObject, ObservableObject {
             AudioHardwareDestroyProcessTap(tapID)
             aggregateDeviceID = 0
             tapID = 0
-            errorMessage = "AudioDeviceCreateIOProcIDWithBlock failed: \(status)"
+            DispatchQueue.main.async { [weak self] in
+                self?.errorMessage = "AudioDeviceCreateIOProcIDWithBlock failed: \(status)"
+            }
             return
         }
         ioProcID = procID
@@ -120,11 +126,15 @@ final class SystemAudioCaptureService: NSObject, ObservableObject {
             ioProcID = nil
             aggregateDeviceID = 0
             tapID = 0
-            errorMessage = "AudioDeviceStart failed: \(status)"
+            DispatchQueue.main.async { [weak self] in
+                self?.errorMessage = "AudioDeviceStart failed: \(status)"
+            }
             return
         }
 
-        isRunning = true
+        DispatchQueue.main.async { [weak self] in
+            self?.isRunning = true
+        }
     }
 
     func stop() {
@@ -136,7 +146,9 @@ final class SystemAudioCaptureService: NSObject, ObservableObject {
         ioProcID = nil
         aggregateDeviceID = 0
         tapID = 0
-        isRunning = false
-        errorMessage = nil
+        DispatchQueue.main.async { [weak self] in
+            self?.isRunning = false
+            self?.errorMessage = nil
+        }
     }
 }

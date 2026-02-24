@@ -25,7 +25,12 @@ final class OllamaService: ObservableObject {
     init(baseURL: URL? = nil, model: String = "llama3.2") {
         self._baseURL = baseURL ?? Self.defaultBaseURL
         self._model = model
-        self.session = URLSession.shared
+        let config = URLSessionConfiguration.default
+        // Bypass proxy for localhost/127.0.0.1 to avoid NSURLErrorDomain -1003 when PAC is used.
+        config.connectionProxyDictionary = [
+            kCFNetworkProxiesExceptionsList as String: ["127.0.0.1", "localhost"]
+        ]
+        self.session = URLSession(configuration: config)
     }
 
     func checkAvailability() async {

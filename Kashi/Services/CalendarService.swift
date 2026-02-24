@@ -38,15 +38,22 @@ final class CalendarService: ObservableObject {
     }
 
     func fetchUpcomingEvents(withinHours: Double = 24) {
-        authorizationStatus = EKEventStore.authorizationStatus(for: .event)
-        guard authorizationStatus == .fullAccess || authorizationStatus == .authorized else {
-            upcomingEvents = []
+        let status = EKEventStore.authorizationStatus(for: .event)
+        guard status == .fullAccess || status == .authorized else {
+            DispatchQueue.main.async { [weak self] in
+                self?.authorizationStatus = status
+                self?.upcomingEvents = []
+            }
             return
         }
         let start = Date()
         let end = start.addingTimeInterval(withinHours * 3600)
         let predicate = eventStore.predicateForEvents(withStart: start, end: end, calendars: nil)
         let events = eventStore.events(matching: predicate)
-        upcomingEvents = events.sorted { ($0.startDate ?? .distantPast) < ($1.startDate ?? .distantPast) }
+        let sorted = events.sorted { ($0.startDate ?? .distantPast) < ($1.startDate ?? .distantPast) }
+        DispatchQueue.main.async { [weak self] in
+            self?.authorizationStatus = status
+            self?.upcomingEvents = sorted
+        }
     }
 }

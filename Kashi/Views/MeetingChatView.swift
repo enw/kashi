@@ -43,21 +43,21 @@ struct MeetingChatView: View {
         answer = ""
         isStreaming = true
         Task {
-            defer { isStreaming = false }
+            defer { await MainActor.run { isStreaming = false } }
             var full = ""
             do {
                 for try await delta in ollama.streamChat(
-                    model: "llama3.2",
+                    model: ollama.model,
                     system: "Answer based only on the following meeting transcript. Be concise.",
                     messages: [
                         (role: "user", content: "Transcript:\n\(transcriptContext)\n\nQuestion: \(q)")
                     ]
                 ) {
                     full += delta
-                    answer = full
+                    await MainActor.run { answer = full }
                 }
             } catch {
-                answer = "Error: \(error.localizedDescription)"
+                await MainActor.run { answer = "Error: \(error.localizedDescription)" }
             }
         }
     }
