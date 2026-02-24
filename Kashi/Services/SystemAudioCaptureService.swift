@@ -4,7 +4,7 @@ import AVFoundation
 import Combine
 
 /// Captures system (loopback) audio via CoreAudio Process Tap and outputs Float32 mono at 16 kHz.
-@available(macos 14.2, *)
+@available(macOS 14.2, *)
 final class SystemAudioCaptureService: NSObject, ObservableObject {
     @Published private(set) var isRunning = false
     @Published private(set) var errorMessage: String?

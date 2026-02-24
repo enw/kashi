@@ -98,26 +98,38 @@ final class TranscriptionService: ObservableObject {
         guard samples.count > 0 else { return }
         guard let wk = whisperKit else { return }
 
-        let task = Task.detached(priority: .userInitiated) { [weak self] in
-            await MainActor.run { self?.status = .transcribing }
+        let onFinalized = onSegmentFinalized // capture by value
+        let task = Task.detached(priority: .userInitiated) { [wk, speaker, onFinalized, samples] in
+            await MainActor.run { [weak self] in self?.status = .transcribing }
+
+            // Compute results into immutable locals to satisfy @Sendable capture rules
+            let producedSegment: TranscriptSegment?
+            let producedError: String?
             do {
                 let results = try await wk.transcribe(audioArray: samples)
                 let text = results.map(\.text).joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
-                if !text.isEmpty {
-                    let segment = TranscriptSegment(
-                        text: text,
-                        speaker: speaker,
-                        timestamp: Date()
-                    )
-                    await MainActor.run {
-                        self?.segments.append(segment)
-                        self?.onSegmentFinalized?(segment)
-                    }
+                if Self.isMeaningfulTranscript(text) {
+                    producedSegment = TranscriptSegment(text: text, speaker: speaker, timestamp: Date())
+                } else {
+                    producedSegment = nil
                 }
+                producedError = nil
             } catch {
-                await MainActor.run { self?.errorMessage = error.localizedDescription }
+                producedSegment = nil
+                producedError = error.localizedDescription
             }
-            await MainActor.run { self?.status = .ready; self?.processingTask = nil }
+
+            await MainActor.run { [weak self, producedSegment, producedError, onFinalized] in
+                if let segment = producedSegment {
+                    self?.segments.append(segment)
+                    onFinalized?(segment)
+                }
+                if let errorMessage = producedError {
+                    self?.errorMessage = errorMessage
+                }
+                self?.status = .ready
+                self?.processingTask = nil
+            }
         }
         processingTask = task
     }
@@ -133,5 +145,24 @@ final class TranscriptionService: ObservableObject {
         processingTask = nil
         clearTranscript()
         status = .ready
+    }
+
+    /// Treats silence/placeholder tokens as non-meaningful so we don't show them in the transcript.
+    private nonisolated static func isMeaningfulTranscript(_ text: String) -> Bool {
+        let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if t.isEmpty { return false }
+        let lower = t.lowercased()
+        let silenceMarkers = [
+            "[blank_audio]",
+            "[blank audio]",
+            "(silence)",
+            "[silence]",
+            "[no speech]",
+            "...",
+            "…"
+        ]
+        if silenceMarkers.contains(lower) { return false }
+        if lower.hasPrefix("[blank") { return false }
+        return true
     }
 }
