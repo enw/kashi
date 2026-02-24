@@ -51,4 +51,4 @@ On first run, allow **Microphone** and (if you use calendar) **Calendar** access
 
 ## License
 
-Use and modify as you like.
+MIT License — see [LICENSE](LICENSE).
