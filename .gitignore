@@ -1,0 +1,15 @@
+# Xcode user state (do not commit)
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad
+
+# Build products
+build/
+DerivedData/
+
+# macOS
+.DS_Store
+
+# Swift Package Manager
+.build/
+.swiftpm/
